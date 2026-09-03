@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orb Collector — Temiz Oda Mimarisi</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: #0b0d13;
+        color: #c9d1d9;
+        font-family: system-ui, sans-serif;
+      }
+      canvas {
+        display: block;
+        background: #12141c;
+        border-radius: 8px;
+        max-width: 100vw;
+      }
+      #hud {
+        font-variant-numeric: tabular-nums;
+        color: #4cc9f0;
+      }
+      p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <canvas id="game"></canvas>
+    </main>
+    <span id="hud">tohum — • skor — • tick — • hash —</span>
+    <p>Ok tuşları veya WASD ile topu hareket ettir, orb'lara değ.</p>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
