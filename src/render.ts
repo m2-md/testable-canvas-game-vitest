@@ -3,8 +3,8 @@ import { WORLD, type State } from "./sim";
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /**
- * SADECE çizer. Karar vermez, durum değiştirmez, skor saymaz.
- * Bu dosyanın hiçbir satırı test edilmiyor; doğrulaması göz ile.
+ * Pure renderer. Makes no decisions, mutates no state, counts no score.
+ * No line in this file is tested; validation is visual.
  */
 export function render(
   ctx: CanvasRenderingContext2D,
@@ -22,7 +22,7 @@ export function render(
     ctx.fill();
   }
 
-  // Oyuncu iki tık arasında enterpolasyonla çizilir.
+  // Player is rendered by interpolating between two ticks.
   const x = lerp(prev.player.x, curr.player.x, alpha);
   const y = lerp(prev.player.y, curr.player.y, alpha);
   ctx.beginPath();

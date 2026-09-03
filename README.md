@@ -1,45 +1,46 @@
-# Orb Collector — Test Edilebilir Canvas Oyunu (Temiz Oda Mimarisi)
+# Orb Collector — A Testable Canvas Game (Clean Room Architecture)
 
-"Temiz Oda: Canvas Oyununu Test Edilebilir Yapan Şey Test Değil, Mimari" makalesinin
-çalışan kodu. Küçük ama tam bir canvas oyunu (**Orb Collector**) ve onu headless
-vitest'te kanıtlayan 10 test.
+Working code for the article "Clean Room: What Makes a Canvas Game Testable Is Not the
+Tests, It's the Architecture". A small but complete canvas game (**Orb Collector**) and
+the 10 tests that prove it in headless vitest.
 
-Fikir tek cümle: simülasyonu render'dan, rastgeleliği `Math.random`'dan, zamanı
-`performance.now`'dan ayır. Geriye kalan `step(state, input, dt, rng)` saf bir
-fonksiyondur — Node'da, worker'da, sunucuda, testte aynı sonucu verir.
+The idea in one sentence: separate the simulation from the rendering, the randomness from
+`Math.random`, and the time from `performance.now`. What is left, `step(state, input, dt, rng)`,
+is a pure function — it gives the same result in Node, in a worker, on a server, in a test.
 
-## İçerik
+## Contents
 
-- `src/sim.ts` — oyunun tek gerçeği. `State`, `step`, `runTicks`, `chaseNearest` (saf
-  test botu). DOM yok, `Math.random` yok, `Date` yok. Tek import: `type Rng`.
-- `src/rng.ts` — `mulberry32(seed)`: tohumlu PRNG. Aynı tohum → aynı dizi.
-- `src/clock.ts` — `Clock` arayüzü (`systemClock` / `makeFakeClock`) + `FixedLoop`.
-  Girdiyi kare başına değil **tick başına** örnekler; determinizmin sessiz şartı budur.
-- `src/hash.ts` — `hashState`: bütün simülasyon durumunu tek 32-bit sayıya indiren
-  FNV-1a. Float'lar bit bit karıştırılır, `-0` tuzağı `x + 0` ile kapatılır.
-- `src/render.ts` — SADECE çizer. Karar vermez, durum değiştirmez. Testi yok, testi göz.
-- `src/main.ts` + `index.html` — tarayıcıya bakan tek yüz: klavye → `Input`, rAF → `FixedLoop`,
-  HUD'da tohum / skor / tick / hash.
-- `src/bench-cli.ts` — aynı tohumlu simülasyonu 200 kez koşturur; hash sabitliğini ve
-  tick maliyetini raporlar.
-- `test/sim.test.ts` — 10 test: determinizm, golden hash, dt bölünmesi, mimari kurallar
-  (`Math.random` ve DOM tuzakları), mutasyonsuzluk, oyun kuralları.
+- `src/sim.ts` — the single source of truth of the game. `State`, `step`, `runTicks`,
+  `chaseNearest` (the pure test bot). No DOM, no `Math.random`, no `Date`. One import: `type Rng`.
+- `src/rng.ts` — `mulberry32(seed)`: a seeded PRNG. Same seed → same sequence.
+- `src/clock.ts` — the `Clock` interface (`systemClock` / `makeFakeClock`) + `FixedLoop`.
+  It samples input **per tick**, not per frame; that is the quiet precondition of determinism.
+- `src/hash.ts` — `hashState`: FNV-1a, reducing the whole simulation state into a single
+  32-bit number. Floats are mixed bit by bit, and the `-0` trap is closed with `x + 0`.
+- `src/render.ts` — it ONLY draws. It makes no decisions, it changes no state. It has no
+  test; the test is your eye.
+- `src/main.ts` + `index.html` — the only face turned toward the browser: keyboard → `Input`,
+  rAF → `FixedLoop`, seed / score / tick / hash in the HUD.
+- `src/bench-cli.ts` — runs the same seeded simulation 200 times; reports hash stability
+  and tick cost.
+- `test/sim.test.ts` — 10 tests: determinism, golden hash, dt subdivision, architectural
+  rules (`Math.random` and DOM traps), non-mutation, game rules.
 
-## Kurulum
+## Setup
 
 ```bash
 npm install
 ```
 
-## Çalıştırma
+## Running
 
-### Testler
+### Tests
 
 ```bash
 npm test
 ```
 
-Beklenen çıktı:
+Expected output:
 
 ```
  ✓ test/sim.test.ts (10 tests) 9ms
@@ -48,74 +49,74 @@ Beklenen çıktı:
       Tests  10 passed (10)
 ```
 
-Testler `node` ortamında koşar — `document` YOK, canvas YOK, WebGL YOK. Bir test bunu
-doğrudan iddia eder: `expect(typeof document).toBe("undefined")`. Bu yüzden
-`environment: "jsdom"` **ayarlanmamalıdır**.
+The tests run in the `node` environment — NO `document`, NO canvas, NO WebGL. One test
+asserts this directly: `expect(typeof document).toBe("undefined")`. That is why
+`environment: "jsdom"` **must not be set**.
 
-### Bench — determinizm + tick maliyeti
+### Bench — determinism + tick cost
 
 ```bash
 npm run bench
 ```
 
-Beklenen çıktı (sayılar makineye göre değişir; `farklı hash sayısı` her zaman 1 olmalı):
+Expected output (the numbers vary by machine; `distinct hash count` must always be 1):
 
 ```
-Orb Collector — determinizm + tick maliyeti
-sahne: tohum=12345 · 600 tick (10.0 sn sim) · 200 koşu
+Orb Collector — determinism + tick cost
+scene: seed=12345 · 600 ticks (10.0 s sim) · 200 runs
 
-determinizm
-  farklı hash sayısı : 1 (beklenen 1)
-  hash               : 0x353ca0ac
-  skor               : 12
-  sonuç              : SABİT ✓
+determinism
+  distinct hash count : 1 (expected 1)
+  hash                : 0x353ca0ac
+  score               : 12
+  result              : STABLE ✓
 
-maliyet
-  koşu başına medyan : 0.027 ms
-  koşu başına p95    : 0.081 ms
-  tick başına        : 0.045 µs
-  200 koşu toplamı   : 6.6 ms (120,000 tick)
-  16.7 ms bütçesinde : ~370,378 tick
+cost
+  median per run      : 0.027 ms
+  p95 per run         : 0.081 ms
+  per tick            : 0.045 µs
+  total over 200 runs : 6.6 ms (120,000 ticks)
+  within a 16.7 ms budget : ~370,378 ticks
 ```
 
-Hash kümesi birden büyük çıkarsa bench hata fırlatır: bir yerde odaya toz kaçmıştır.
+If the hash set comes out larger than one, the bench throws: dust got into the room somewhere.
 
-### Canlı demo
+### Live demo
 
-> ⚠️ **`index.html`'i çift tıklayıp doğrudan açma.** Demo bir TypeScript modülü
-> (`<script type="module" src="/src/main.ts">`) yükler; `file://` ile boş ekran görürsün.
-> Tek çalıştırma yolu aşağıdaki Vite komutudur.
+> ⚠️ **Do not double-click `index.html` and open it directly.** The demo loads a TypeScript
+> module (`<script type="module" src="/src/main.ts">`); over `file://` you will see a blank
+> screen. The only way to run it is the Vite command below.
 
 ```bash
 npm run dev
 ```
 
-`http://localhost:5173/` açılır. **Ok tuşları veya WASD** ile mavi topu sürüp sarı
-orb'lara değ; her temas skoru artırır. HUD'da:
+`http://localhost:5173/` opens. Drive the blue ball with the **arrow keys or WASD** and touch
+the yellow orbs; every contact raises the score. In the HUD:
 
 ```
-tohum 12345 • skor 7 • tick 1042 • hash 9c1be3a4
+seed 12345 • score 7 • tick 1042 • hash 9c1be3a4
 ```
 
-Tohum sabit (12345), yani her açılışta aynı orb dizilimi doğar. İki tarayıcıda demoyu
-açıp aynı tuşlara aynı sırayla basarsan aynı tick'te aynı hex sayıyı görmen gerekir —
-determinizmin çıplak gözle kontrolü budur.
+The seed is fixed (12345), so the same orb layout is born on every launch. If you open the
+demo in two browsers and press the same keys in the same order, you should see the same hex
+number at the same tick — that is determinism checked with the naked eye.
 
-### Derleme
+### Build
 
 ```bash
 npm run build    # tsc && vite build
-npm run preview  # üretim çıktısını servis et
+npm run preview  # serve the production output
 ```
 
-## Golden hash notu
+## A note on the golden hash
 
-`test/sim.test.ts` içindeki `expect(hashState(s)).toBe(0x353ca0ac)` bir regresyon
-kilididir. `step`'in matematiğini, sabitlerini (ACCEL 1800, FRICTION 3.2, SPAWN_EVERY 0.6,
-MAX_ORBS 12, ORB_R 12, PLAYER_R 16, WORLD 800×600), `chaseNearest`'in ±2 px ölü bölgesini
-veya `hashState`'in alan sırasını değiştirirsen bu sayı değişir. Değişiklik kasıtlıysa
-hash'i güncelle; değilse bir şey oynatmışsındır.
+The `expect(hashState(s)).toBe(0x353ca0ac)` inside `test/sim.test.ts` is a regression lock.
+If you change the math of `step`, its constants (ACCEL 1800, FRICTION 3.2, SPAWN_EVERY 0.6,
+MAX_ORBS 12, ORB_R 12, PLAYER_R 16, WORLD 800×600), the ±2 px dead zone of `chaseNearest`,
+or the field order of `hashState`, this number changes. If the change was intentional, update
+the hash; if it was not, you moved something.
 
-## Lisans
+## License
 
 MIT

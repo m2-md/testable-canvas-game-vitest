@@ -13,7 +13,7 @@ const hud = document.querySelector<HTMLSpanElement>("#hud")!;
 const SEED = 12345;
 const loop = new FixedLoop(systemClock, createState(), mulberry32(SEED));
 
-// Klavye → Input. Tarayıcıya ait tek mantık burada, sim bunu bilmez.
+// Keyboard -> Input. The only browser-specific logic lives here; sim is agnostic.
 const input: Input = { left: false, right: false, up: false, down: false };
 const keymap: Record<string, keyof Input> = {
   ArrowLeft: "left",
@@ -41,7 +41,7 @@ addEventListener("keyup", (e) => {
 function frame() {
   loop.tick(() => input);
   render(ctx, loop.prev, loop.curr, loop.alpha);
-  hud.textContent = `tohum ${SEED} • skor ${loop.curr.score} • tick ${loop.curr.tick} • hash ${hashHex(loop.curr)}`;
+  hud.textContent = `seed ${SEED} • score ${loop.curr.score} • tick ${loop.curr.tick} • hash ${hashHex(loop.curr)}`;
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

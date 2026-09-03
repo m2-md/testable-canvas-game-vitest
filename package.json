@@ -1,7 +1,7 @@
 {
   "name": "testable-canvas-game-vitest",
   "version": "1.0.0",
-  "description": "Temiz oda mimarisi: simülasyonu render'dan, rastgeleliği tohumdan, zamanı duvar saatinden ayıran test edilebilir canvas oyunu (Orb Collector)",
+  "description": "Decoupling game logic from HTML5 Canvas rendering for deterministic unit testing: pure simulation state, headless Vitest runner, zero DOM dependency, and visual snapshots.",
   "type": "module",
   "license": "MIT",
   "scripts": {

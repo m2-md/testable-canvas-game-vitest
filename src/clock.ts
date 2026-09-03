@@ -1,7 +1,7 @@
 import type { Rng } from "./rng";
 import { step, type InputScript, type State } from "./sim";
 
-/** Zamanın tek kapısı. Üretimde duvar saati, testte sahte saat. */
+/** Single gate of time. Wall clock in production, fake clock in tests. */
 export interface Clock {
   now(): number; // milisaniye
 }
@@ -14,7 +14,7 @@ export interface FakeClock extends Clock {
   advance(ms: number): void;
 }
 
-/** Elle ilerletilen saat: test zamanı kendi eliyle yazar. */
+/** Elle ilerletilen clock: test time kendi eliyle writes. */
 export function makeFakeClock(start = 0): FakeClock {
   let t = start;
   return {
@@ -25,7 +25,7 @@ export function makeFakeClock(start = 0): FakeClock {
   };
 }
 
-export const STEP = 1 / 60; // sabit fizik adımı (saniye)
+export const STEP = 1 / 60; // fixed physics step (seconds)
 const MAX_STEPS = 5;
 const MAX_FRAME = 0.25;
 const EPS = 1e-9;
@@ -49,8 +49,8 @@ export class FixedLoop {
   }
 
   /**
-   * Bir kare ilerlet: geçen gerçek zaman kadar 0..MAX_STEPS tık atar.
-   * Girdi HER TIK'ta ayrı okunur — kare başına bir kez değil.
+   * Advance one frame: ticks 0..MAX_STEPS times according to elapsed real time.
+   * Input is sampled separately on every TICK — not once per frame.
    */
   tick(poll: InputScript): number {
     const now = this.clock.now();

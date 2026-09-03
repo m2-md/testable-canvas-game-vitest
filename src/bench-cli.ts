@@ -13,7 +13,7 @@ function runOnce(seed: number, ticks: number) {
   return runTicks(createState(), chaseNearest, ticks, STEP, mulberry32(seed));
 }
 
-// Isınma turu: JIT'in sıcak yola girmesi için.
+// Warmup round: allows JIT to enter hot path.
 for (let i = 0; i < 20; i++) runOnce(SEED, TICKS);
 
 const hashes = new Set<number>();
@@ -37,27 +37,27 @@ const stable = hashes.size === 1;
 
 console.log("Orb Collector — determinizm + tick maliyeti");
 console.log(
-  `sahne: tohum=${SEED} · ${TICKS} tick (${(TICKS * STEP).toFixed(1)} sn sim) · ${RUNS} koşu\n`,
+  `scene: seed=${SEED} · ${TICKS} ticks (${(TICKS * STEP).toFixed(1)} s sim) · ${RUNS} runs\n`,
 );
 
 console.log("determinizm");
-console.log(`  farklı hash sayısı : ${hashes.size} (beklenen 1)`);
+console.log(`  distinct hashes    : ${hashes.size} (expected 1)`);
 console.log(`  hash               : ${[...hashes].map(hex).join(", ")}`);
 console.log(`  skor               : ${lastScore}`);
-console.log(`  sonuç              : ${stable ? "SABİT ✓" : "IRAKSADI ✗"}\n`);
+console.log(`  result             : ${stable ? "STABLE ✓" : "DIVERGED ✗"}\n`);
 
 console.log("maliyet");
-console.log(`  koşu başına medyan : ${median.toFixed(3)} ms`);
-console.log(`  koşu başına p95    : ${p95.toFixed(3)} ms`);
+console.log(`  median per run     : ${median.toFixed(3)} ms`);
+console.log(`  p95 per run        : ${p95.toFixed(3)} ms`);
 console.log(
-  `  tick başına        : ${((median / TICKS) * 1000).toFixed(3)} µs`,
+  `  per tick           : ${((median / TICKS) * 1000).toFixed(3)} µs`,
 );
 console.log(
-  `  ${RUNS} koşu toplamı   : ${total.toFixed(1)} ms (${(RUNS * TICKS).toLocaleString("en-US")} tick)`,
+  `  ${RUNS} runs total     : ${total.toFixed(1)} ms (${(RUNS * TICKS).toLocaleString("en-US")} ticks)`,
 );
 console.log(
-  `  16.7 ms bütçesinde : ~${Math.round(16.667 / (median / TICKS)).toLocaleString("en-US")} tick`,
+  `  in 16.7 ms budget  : ~${Math.round(16.667 / (median / TICKS)).toLocaleString("en-US")} ticks`,
 );
 
 if (!stable)
-  throw new Error("determinizm bozuldu: aynı tohum farklı hash verdi");
+  throw new Error("determinism broken: same seed produced different hash");

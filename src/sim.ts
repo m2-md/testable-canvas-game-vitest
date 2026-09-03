@@ -46,11 +46,11 @@ export function createState(): State {
 }
 
 /**
- * Oyunun tek gerçeği. DOM yok, Math.random yok, Date.now yok.
- * Dışarıdan gelen (state, input, dt, rng) dörtlüsü sonucu tam belirler.
+ * The single source of truth of the game. No DOM, no Math.random, no Date.now.
+ * The external quadruplet (state, input, dt, rng) determines the result exactly.
  */
 export function step(state: State, input: Input, dt: number, rng: Rng): State {
-  // 1) Girdi → ivme. Çapraz basılıysa hızı normalize et.
+  // 1) input -> acceleration. Normalize velocity if diagonal keys pressed.
   let ax = 0;
   let ay = 0;
   if (input.left) ax -= 1;
@@ -66,7 +66,7 @@ export function step(state: State, input: Input, dt: number, rng: Rng): State {
   let vx = p.vx + ax * ACCEL * dt;
   let vy = p.vy + ay * ACCEL * dt;
 
-  const damp = Math.max(0, 1 - FRICTION * dt); // sürtünme
+  const damp = Math.max(0, 1 - FRICTION * dt); // friction
   vx *= damp;
   vy *= damp;
 
@@ -89,7 +89,7 @@ export function step(state: State, input: Input, dt: number, rng: Rng): State {
     vy = 0;
   }
 
-  // 3) Toplama: değen orb listeden düşer, skor artar.
+  // 3) Collection: touching orb drops from list, score increases.
   const orbs: Orb[] = [];
   let score = state.score;
   for (const orb of state.orbs) {
@@ -103,7 +103,7 @@ export function step(state: State, input: Input, dt: number, rng: Rng): State {
     orbs.push(orb);
   }
 
-  // 4) Doğurma: rastgelelik SADECE parametreden gelen rng'den.
+  // 4) Spawning: randomness comes solely from parameter rng.
   let spawnTimer = state.spawnTimer + dt;
   let nextId = state.nextId;
   while (spawnTimer >= SPAWN_EVERY) {
@@ -129,10 +129,10 @@ export function step(state: State, input: Input, dt: number, rng: Rng): State {
   };
 }
 
-/** Duruma bakıp girdi üreten deterministik senaryo (test "oyuncusu"). */
+/** Deterministic script producing input from state (test "player"). */
 export type InputScript = (state: State) => Input;
 
-/** N tick koştur — testlerin ve replay'in ortak koşucusu. */
+/** Run N ticks — common runner for tests and replay. */
 export function runTicks(
   state: State,
   script: InputScript,
@@ -145,7 +145,7 @@ export function runTicks(
   return s;
 }
 
-/** Hiçbir tuşa basılmamış girdi. */
+/** Input with no keys pressed. */
 export const NO_INPUT: Input = {
   left: false,
   right: false,
@@ -153,11 +153,11 @@ export const NO_INPUT: Input = {
   down: false,
 };
 
-const DEADZONE = 2; // px — bu eşiğin altında yön basılmaz
+const DEADZONE = 2; // px — no direction pressed below this threshold
 
 /**
- * Saf bot: en yakın orb'a doğru koşar. Testlerin "oyuncusu" bu.
- * Sadece state okur; ne rastgelelik ne zaman bilir.
+ * Pure bot: runs towards nearest orb. This is the "player" in tests.
+ * Reads state only; it knows neither randomness nor time.
  */
 export function chaseNearest(state: State): Input {
   let target: Orb | undefined;
