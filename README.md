@@ -1,5 +1,9 @@
 # Orb Collector — A Testable Canvas Game (Clean Room Architecture)
 
+<!-- LINKS:BEGIN — üretildi: scripts/sync-repo-links.py · elle düzenleme -->
+**▶ [Live demo](https://m2-md.github.io/testable-canvas-game-vitest/)** · [Source](https://github.com/m2-md/testable-canvas-game-vitest)
+<!-- LINKS:END -->
+
 Working code for the article "Clean Room: What Makes a Canvas Game Testable Is Not the
 Tests, It's the Architecture". A small but complete canvas game (**Orb Collector**) and
 the 10 tests that prove it in headless vitest.
